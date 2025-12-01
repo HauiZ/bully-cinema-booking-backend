@@ -18,6 +18,9 @@
   },
   "homepage": "https://github.com/HauiZ/bully-cinema-booking-backend#readme",
   "dependencies": {
-    "express": "^5.1.0"
+    "axios": "^1.13.2",
+    "dotenv": "^17.2.3",
+    "express": "^5.1.0",
+    "mysql2": "^3.15.3"
   }
 }
