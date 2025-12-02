@@ -7,6 +7,7 @@ const electionRoutes = require('./modules/election/election.routes');
 const nodeRoutes = require('./modules/node/node.routes');
 const transactionRoutes = require('./modules/transaction/transaction.routes');
 const systemRoutes = require('./modules/system/system.routes');
+const morgan = require('morgan');
 
 function createApp() {
   const app = express();
@@ -14,6 +15,7 @@ function createApp() {
   app.use(bodyParser.json());
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
+  app.use(morgan('dev'));
 
   // Routes
   app.use('/seats', seatRoutes); // Mount seat routes under /seats
