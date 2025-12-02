@@ -5,7 +5,7 @@
 require('dotenv').config();
 const { createApp } = require('./app');
 const { sequelize } = require('./models');
-const { startElection, startHeartbeat } = require('./services/bullyService');
+const { startElection, startHeartbeat } = require('./modules/election/election.service');
 
 const app = createApp();
 

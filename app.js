@@ -1,9 +1,12 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 
-const ticketRoutes = require('./routes/ticketRoutes');
-const mutexRoutes = require('./routes/mutexRoutes');
-const bullyRoutes = require('./routes/bullyRoutes');
+const seatRoutes = require('./modules/seat/seat.routes');
+const mutexRoutes = require('./modules/mutex/mutex.routes');
+const electionRoutes = require('./modules/election/election.routes');
+const nodeRoutes = require('./modules/node/node.routes');
+const transactionRoutes = require('./modules/transaction/transaction.routes');
+const systemRoutes = require('./modules/system/system.routes');
 
 function createApp() {
   const app = express();
@@ -13,9 +16,12 @@ function createApp() {
   app.use(express.urlencoded({ extended: true }));
 
   // Routes
-  app.use(ticketRoutes);
-  app.use(mutexRoutes);
-  app.use(bullyRoutes);
+  app.use('/seats', seatRoutes); // Mount seat routes under /seats
+  app.use('/mutex', mutexRoutes); // Mount mutex routes under /mutex
+  app.use('/election', electionRoutes); // Mount election routes under /election
+  app.use('/nodes', nodeRoutes); // Mount node routes under /nodes
+  app.use('/transactions', transactionRoutes); // Mount transaction routes under /transactions
+  app.use('/system', systemRoutes); // Mount system routes under /system
 
   return app;
 }
