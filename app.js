@@ -18,11 +18,11 @@ function createApp() {
   app.use(morgan('dev'));
 
   // Routes
-  app.use('/seats', seatRoutes); // Mount seat routes under /seats
+  app.use('/seat', seatRoutes); // Mount seat routes under /seats
   app.use('/mutex', mutexRoutes); // Mount mutex routes under /mutex
   app.use('/election', electionRoutes); // Mount election routes under /election
-  app.use('/nodes', nodeRoutes); // Mount node routes under /nodes
-  app.use('/transactions', transactionRoutes); // Mount transaction routes under /transactions
+  app.use('/node', nodeRoutes); // Mount node routes under /nodes
+  app.use('/transaction', transactionRoutes); // Mount transaction routes under /transactions
   app.use('/system', systemRoutes); // Mount system routes under /system
 
   return app;
