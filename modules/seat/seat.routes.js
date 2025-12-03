@@ -15,7 +15,7 @@ const router = express.Router();
  * /seat:
  *   get:
  *     summary: Get all seats
- *     description: Retrieve information about all seats in the cinema including their booking status (actual endpoint: /seats/seats)
+ *     description: "Retrieve information about all seats in the cinema including their booking status (actual endpoint: /seats/seats)"
  *     tags: [Seat]
  *     responses:
  *       200:
@@ -51,7 +51,7 @@ router.get('/', getSeats);
  * /seat/book:
  *   post:
  *     summary: Book a seat
- *     description: Book a specific seat in the cinema (actual endpoint: /seats/seats/book)
+ *     description: "Book a specific seat in the cinema (actual endpoint: /seats/seats/book)"
  *     tags: [Seat]
  *     requestBody:
  *       required: true
@@ -62,7 +62,7 @@ router.get('/', getSeats);
  *             properties:
  *               seatId:
  *                 type: string
- *                 description: Seat number to book (e.g., "A1", "B2")
+ *                 description: "Seat number to book (e.g., \"A1\", \"B2\")"
  *                 example: "A1"
  *               customerName:
  *                 type: string
@@ -91,7 +91,7 @@ router.post('/book', bookSeat);
  * /seat/release:
  *   post:
  *     summary: Release a seat
- *     description: Release a previously booked seat, making it available again (actual endpoint: /seats/seats/release)
+ *     description: "Release a previously booked seat, making it available again (actual endpoint: /seats/seats/release)"
  *     tags: [Seat]
  *     requestBody:
  *       required: true
