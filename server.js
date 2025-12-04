@@ -1,6 +1,6 @@
 require("dotenv").config();
 const { createApp } = require("./app");
-const { sequelize } = require("./models");
+const { sequelize, Node } = require("./models"); 
 const {
   startElection,
   startHeartbeat,
@@ -14,7 +14,7 @@ swaggerSetup(app);
 
 app.listen(process.env.MY_PORT, "0.0.0.0", async () => {
   console.log(
-    `🚀 Node ${process.env.MY_ID} running at Port ${process.env.IP_NETWORK}`
+    `🚀 Node ${process.env.MY_ID} running at Port ${process.env.MY_PORT}`
   );
   console.log(
     `Swagger docs at http://${process.env.IP_NETWORK}:${
@@ -26,6 +26,12 @@ app.listen(process.env.MY_PORT, "0.0.0.0", async () => {
     await sequelize.authenticate();
     console.log("✅ Kết nối Database thành công!");
     await sequelize.sync({ alter: false });
+    await Node.update(
+      { isLeader: false, isAlive: true }, 
+      { where: { id: process.env.MY_ID } }
+    );
+    console.log(`🔄 Node ${process.env.MY_ID} status reset successfully.`);
+
   } catch (error) {
     console.error("❌ Không thể kết nối DB:", error.message);
   }
