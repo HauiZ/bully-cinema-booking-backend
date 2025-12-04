@@ -12,12 +12,10 @@ dotenv.config();
 
 const myId = parseInt(process.env.MY_ID, 10);
 
-// GET /ping
 function handlePing(req, res) {
   return res.sendStatus(200);
 }
 
-// POST /election
 async function handleElection(req, res) {
   const { senderId } = req.body;
   if (myId > senderId) {
@@ -31,7 +29,6 @@ async function handleElection(req, res) {
   }
 }
 
-// POST /victory
 async function handleVictory(req, res) {
   const { leaderId, candidates, reason } = req.body;
   const oldLeaderId = state.currentLeaderId;
@@ -94,9 +91,7 @@ async function startElection() {
         { timeout: 1000 }
       );
       anyoneAlive = true;
-    } catch (e) {
-      // Node is unresponsive
-    }
+    } catch (e) { }
   });
 
   await Promise.all(electionPromises);
@@ -110,10 +105,7 @@ async function startElection() {
   if (!anyoneAlive) {
     await declareVictory(allNodes, reason);
   } else {
-    // Wait for a potential victory message from a higher node
-    // Use a more robust timeout mechanism that can be cleared if we receive a victory
     setTimeout(async () => {
-      // Only reset if we're still in an election state and haven't become leader
       if (state.isElectionRunning && state.currentLeaderId !== myId) {
         state.isElectionRunning = false;
       }
@@ -129,7 +121,6 @@ async function declareVictory(allNodes, reason) {
   await Node.update({ isLeader: false }, { where: { isLeader: true } });
   const me = await Node.findByPk(myId);
   if (!me) {
-    // Reset election state if we couldn't update our own status
     state.isElectionRunning = false;
     return;
   }
@@ -166,13 +157,11 @@ async function declareVictory(allNodes, reason) {
   });
   await Promise.all(victoryPromises);
 
-  // Ensure election state is properly reset after victory is declared
   state.isElectionRunning = false;
 }
 
 async function startHeartbeat() {
   setInterval(async () => {
-    // Only proceed if I'm not the leader, no election is running, and there is a leader to check
     if (
       state.currentLeaderId === myId ||
       state.isElectionRunning ||
@@ -196,7 +185,6 @@ async function startHeartbeat() {
       console.log(
         "☠️ Leader is unresponsive. Marking as dead and starting election!"
       );
-      // Update leader status in DB
       leader.isAlive = false;
       await leader.save();
       state.currentLeaderId = null;

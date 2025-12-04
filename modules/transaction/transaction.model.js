@@ -13,7 +13,7 @@ const TransactionLog = sequelize.define('TransactionLog', {
     allowNull: false,
   },
   action_type: {
-    type: DataTypes.ENUM(...Object.values(TransactionType)),
+    type: DataTypes.ENUM(...Object.values(TransactionType).filter(v => typeof v === 'string')),
     allowNull: false,
   },
   description: DataTypes.TEXT,

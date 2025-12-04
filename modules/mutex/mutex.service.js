@@ -5,7 +5,7 @@ const { startElection } = require('../../modules/election/election.service');
 const dotenv = require('dotenv');
 dotenv.config();
 
-const myId = process.env.MY_ID;
+const myId = parseInt(process.env.MY_ID, 10);
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
@@ -18,13 +18,18 @@ async function acquireLockWithRetry(requesterId) {
     }
 
     try {
+
       if (state.currentLeaderId === myId) {
         await acquireLocalLock();
       } else {
         const leader = nodes.find((n) => n.id === state.currentLeaderId);
-        await axios.post(`${leader.url}/mutex/acquire`, { requesterId }, { timeout: 5000 });
+        if (leader) {
+          await axios.post(`${leader.url}/mutex/acquire`, { requesterId }, { timeout: 5000 });
+        } else {
+          throw new Error("Leader not found in config");
+        }
       }
-      return; // thành công
+      return;
     } catch (error) {
       console.log(
         `⚠️ Không xin được khóa (Leader ${state.currentLeaderId} có thể đã chết). Đang đợi bầu lại...`
@@ -42,9 +47,8 @@ async function releaseLock() {
   } else {
     try {
       const leader = nodes.find((n) => n.id === state.currentLeaderId);
-      await axios.post(`${leader.url}/mutex/release`, { requesterId: myId });
+      if (leader) await axios.post(`${leader.url}/mutex/release`, { requesterId: myId });
     } catch (e) {
-      // bỏ qua lỗi mạng khi trả khóa
     }
   }
 }
@@ -68,7 +72,11 @@ function processNextInQueue() {
   if (state.requestQueue.length > 0) {
     const next = state.requestQueue.shift();
     console.log(`➡️ Chuyển khóa cho Node ${next.requesterId}`);
-    next.res.send('GRANTED');
+    if (typeof next.res.send === 'function') {
+      next.res.send('GRANTED');
+    } else {
+      next.res.send('GRANTED');
+    }
   } else {
     state.isResourceLocked = false;
     console.log('🏁 Tài nguyên rảnh rỗi.');

@@ -15,7 +15,7 @@ async function getSeats(req, res) {
     return seats;
   } catch (err) {
     console.error('Error fetching seats:', err);
-    throw new InternalServerError(err.me);
+    throw new InternalServerError(err.message);
   }
 }
 
@@ -25,71 +25,80 @@ async function bookSeat(req, res) {
 
   await acquireLockWithRetry(myId);
 
-  console.log('Lock acquired! Accessing critical section...');
+  try {
+    console.log('Lock acquired! Accessing critical section...');
+    const targetSeat = await Seat.findOne({
+      where: { seat_number: seatId, status: SeatStatus.AVAILABLE },
+    });
 
-  const targetSeat = await Seat.findOne({
-    where: { seat_number: seatId, status: SeatStatus.AVAILABLE },
-  });
+    if (!targetSeat) {
+      console.log('Seat not available or does not exist.');
+      throw new ConflictError('Ghế đã bị đặt hoặc không tồn tại.');
+    }
 
-  if (!targetSeat) {
-    console.log('Seat not available or does not exist.');
+    targetSeat.status = SeatStatus.BOOKED;
+    targetSeat.customer_name = customerName;
+    targetSeat.booked_by_node_id = myId;
+    await targetSeat.save();
+
+    await TransactionLog.create({
+      node_id: myId,
+      action_type: TransactionType.BUY,
+      description: `Customer ${customerName} bought Seat ${seatId}`,
+    });
+
+    console.log('Database updated successfully!');
+    return targetSeat;
+
+  } catch (error) {
+    console.error("Error during transaction:", error);
+    throw error; 
+  } finally {
     await releaseLock();
-    throw new ConflictError();
+    console.log('Lock released.');
   }
-
-  targetSeat.status = SeatStatus.BOOKED;
-  targetSeat.customer_name = customerName;
-  targetSeat.booked_by_node_id = myId;
-  await targetSeat.save();
-
-  await TransactionLog.create({
-    node_id: myId,
-    action_type: TransactionType.BUY,
-    description: `Customer ${customerName} bought Seat ${seatId}`,
-  });
-
-  console.log('Database updated successfully!');
-
-  await releaseLock();
-
-  return targetSeat;
 }
 
 async function releaseSeat(req, res) {
   const { seatId } = req.body;
   console.log(`[REQ] Releasing seat ${seatId}`);
-
   await acquireLockWithRetry(myId);
 
-  console.log('Lock acquired! Accessing critical section...');
+  try {
+    console.log('Lock acquired! Accessing critical section...');
 
-  const targetSeat = await Seat.findOne({
-    where: { seat_number: seatId, status: SeatStatus.BOOKED },
-  });
+    const targetSeat = await Seat.findOne({
+      where: { seat_number: seatId, status: SeatStatus.BOOKED },
+    });
 
-  if (!targetSeat) {
-    console.log('Seat not booked or does not exist.');
+    if (!targetSeat) {
+      console.log('Seat not booked or does not exist.');
+      throw new NotFoundError('Ghế chưa được đặt hoặc không tồn tại.');
+    }
+
+    const previous_customer = targetSeat.customer_name;
+
+    targetSeat.status = SeatStatus.AVAILABLE;
+    targetSeat.customer_name = null;
+    targetSeat.booked_by_node_id = null;
+    await targetSeat.save();
+
+    await TransactionLog.create({
+      node_id: myId,
+      action_type: TransactionType.RELEASE,
+      description: `Seat ${seatId} released (was booked by ${previous_customer})`,
+    });
+
+    console.log('Database updated successfully!');
+    return targetSeat;
+
+  } catch (error) {
+    console.error("Error during release transaction:", error);
+    throw error;
+  } finally {
     await releaseLock();
-    throw new NotFoundError();
+    console.log('Lock released.');
   }
-
-  const previous_customer = targetSeat.customer_name;
-  targetSeat.status = SeatStatus.AVAILABLE;
-  targetSeat.customer_name = null;
-  targetSeat.booked_by_node_id = null;
-  await targetSeat.save();
-
-  await TransactionLog.create({
-    node_id: myId,
-    action_type: TransactionType.RELEASE,
-    description: `Seat ${seatId} released (was booked by ${previous_customer})`,
-  });
-
-  console.log('Database updated successfully!');
-
-  await releaseLock();
-
-  return targetSeat;
 }
 
 module.exports = {
