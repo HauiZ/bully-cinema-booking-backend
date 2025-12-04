@@ -7,11 +7,11 @@ const ElectionHistory = sequelize.define('ElectionHistory', {
     autoIncrement: true,
     primaryKey: true,
   },
-  old_leader_id: {
+  oldLeaderId: {
     type: DataTypes.INTEGER,
     allowNull: true,
   },
-  new_leader_id: {
+  newLeaderId: {
     type: DataTypes.INTEGER,
     allowNull: false,
   },
@@ -27,6 +27,7 @@ const ElectionHistory = sequelize.define('ElectionHistory', {
   timestamps: true,
   updatedAt: false,
   createdAt: 'created_at',
+  underscored: true
 });
 
 module.exports = ElectionHistory;

@@ -1,29 +1,41 @@
-/**
- * HỆ THỐNG PHÂN TÁN - SEQUELIZE ORM VERSION (Refactor)
- */
-
-require('dotenv').config();
-const { createApp } = require('./app');
-const { sequelize } = require('./models');
-const { startElection, startHeartbeat } = require('./modules/election/election.service');
-const swaggerSetup = require('./swagger'); 
+require("dotenv").config();
+const { createApp } = require("./app");
+const { sequelize } = require("./models");
+const {
+  startElection,
+  startHeartbeat,
+} = require("./modules/election/election.service");
+const socketClient = require("./modules/socket-client/socket.client");
+const swaggerSetup = require("./swagger");
 
 const app = createApp();
 
 swaggerSetup(app);
 
-app.listen(process.env.MY_PORT, '0.0.0.0', async () => {
-  console.log(`🚀 Node ${process.env.MY_ID} running at Port ${process.env.IP_NETWORK}`);
-  console.log(`Swagger docs at http://${process.env.IP_NETWORK}:${process.env.MY_PORT || 3000}/api-docs`);
+app.listen(process.env.MY_PORT, "0.0.0.0", async () => {
+  console.log(
+    `🚀 Node ${process.env.MY_ID} running at Port ${process.env.IP_NETWORK}`
+  );
+  console.log(
+    `Swagger docs at http://${process.env.IP_NETWORK}:${
+      process.env.MY_PORT || 3000
+    }/api-docs`
+  );
 
   try {
     await sequelize.authenticate();
-    console.log('✅ Kết nối Database thành công!');
+    console.log("✅ Kết nối Database thành công!");
     await sequelize.sync({ alter: false });
   } catch (error) {
-    console.error('❌ Không thể kết nối DB:', error.message);
+    console.error("❌ Không thể kết nối DB:", error.message);
   }
 
-  setTimeout(startElection, 3000);
-  startHeartbeat();
+  try {
+    socketClient.init();
+    setTimeout(startElection, 3000);
+    startHeartbeat();
+  } catch (error) {
+    console.error("❌ Lỗi khởi động logic phân tán:", error.message);
+    process.exit(1);
+  }
 });

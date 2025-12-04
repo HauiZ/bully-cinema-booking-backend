@@ -6,7 +6,9 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node server.js",
-    "dev": "nodemon server.js"
+    "dev": "nodemon server.js",
+    "socket:dev": "nodemon .socket/live-election.socket.js",
+    "socket": "node .socket/live-election.socket.js"
   },
   "repository": {
     "type": "git",
@@ -27,9 +29,10 @@
     "morgan": "^1.10.1",
     "mysql2": "^3.15.3",
     "sequelize": "^6.37.7",
+    "socket.io": "^4.8.1",
+    "socket.io-client": "^4.8.1",
     "swagger-jsdoc": "^6.2.8",
-    "swagger-ui-express": "^5.0.1",
-    "socket.io": "^4.8.1"
+    "swagger-ui-express": "^5.0.1"
   },
   "devDependencies": {
     "nodemon": "^3.1.11"

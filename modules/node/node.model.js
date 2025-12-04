@@ -6,21 +6,22 @@ const Node = sequelize.define('Node', {
     type: DataTypes.INTEGER,
     primaryKey: true,
   },
-  is_alive: {
+  isAlive: {
     type: DataTypes.BOOLEAN,
     defaultValue: true,
   },
-  is_leader: {
+  isLeader: {
     type: DataTypes.BOOLEAN,
     defaultValue: false,
   },
-  last_heartbeat: {
+  lastHeartbeat: {
     type: DataTypes.DATE,
     defaultValue: DataTypes.NOW,
   },
 }, {
   tableName: 'nodes',
   timestamps: false,
+  underscored: true
 });
 
 module.exports = Node;

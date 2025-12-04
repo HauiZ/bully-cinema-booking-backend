@@ -30,10 +30,10 @@ const router = express.Router();
  *                   id:
  *                     type: integer
  *                     example: 1
- *                   is_alive:
+ *                   isAlive:
  *                     type: boolean
  *                     example: true
- *                   is_leader:
+ *                   isLeader:
  *                     type: boolean
  *                     example: false
  *                   last_heartbeat:

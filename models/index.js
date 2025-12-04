@@ -11,11 +11,11 @@ Seat.belongsTo(Node, { foreignKey: 'booked_by_node_id' });
 Node.hasMany(TransactionLog, { foreignKey: 'node_id' });
 TransactionLog.belongsTo(Node, { foreignKey: 'node_id' });
 
-Node.hasMany(ElectionHistory, { as: 'OldLeaderHistory', foreignKey: 'old_leader_id' });
-ElectionHistory.belongsTo(Node, { as: 'OldLeader', foreignKey: 'old_leader_id' });
+Node.hasMany(ElectionHistory, { as: 'OldLeaderHistory', foreignKey: 'oldLeaderId' });
+ElectionHistory.belongsTo(Node, { as: 'OldLeader', foreignKey: 'oldLeaderId' });
 
-Node.hasMany(ElectionHistory, { as: 'NewLeaderHistory', foreignKey: 'new_leader_id' });
-ElectionHistory.belongsTo(Node, { as: 'NewLeader', foreignKey: 'new_leader_id' });
+Node.hasMany(ElectionHistory, { as: 'NewLeaderHistory', foreignKey: 'newLeaderId' });
+ElectionHistory.belongsTo(Node, { as: 'NewLeader', foreignKey: 'newLeaderId' });
 
 module.exports = {
   sequelize,
