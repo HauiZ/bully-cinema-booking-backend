@@ -27,8 +27,8 @@ This table is essential for tracking the state of each node in the cluster.
 ```sql
 CREATE TABLE nodes (
     id INT PRIMARY KEY,                       -- Node ID (e.g., 1, 2, 3)
-    is_alive BOOLEAN DEFAULT TRUE,            -- Whether the node is running
-    is_leader BOOLEAN DEFAULT FALSE,          -- Whether this node is the current leader
+    isAlive BOOLEAN DEFAULT TRUE,            -- Whether the node is running
+    isLeader BOOLEAN DEFAULT FALSE,          -- Whether this node is the current leader
     last_heartbeat TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 ```
@@ -70,13 +70,13 @@ Stores a record of each leader election that occurs.
 ```sql
 CREATE TABLE election_history (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    old_leader_id INT,                        -- Can be NULL if no leader existed
-    new_leader_id INT NOT NULL,
+    oldLeaderId INT,                        -- Can be NULL if no leader existed
+    newLeaderId INT NOT NULL,
     candidates TEXT NOT NULL,                 -- JSON array of candidate node IDs, e.g., '[1, 2, 4, 5]'
     reason VARCHAR(255),                      -- e.g., "Node 3 was terminated"
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (old_leader_id) REFERENCES nodes(id),
-    FOREIGN KEY (new_leader_id) REFERENCES nodes(id)
+    FOREIGN KEY (oldLeaderId) REFERENCES nodes(id),
+    FOREIGN KEY (newLeaderId) REFERENCES nodes(id)
 );
 ```
 

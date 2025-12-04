@@ -81,10 +81,10 @@ router.get('/', getTransactions);
  *                   id:
  *                     type: integer
  *                     example: 1
- *                   old_leader_id:
+ *                   oldLeaderId:
  *                     type: integer
  *                     example: 1
- *                   new_leader_id:
+ *                   newLeaderId:
  *                     type: integer
  *                     example: 3
  *                   candidates:
