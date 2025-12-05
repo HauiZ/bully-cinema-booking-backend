@@ -61,13 +61,13 @@ class SocketClient {
         const messageId = this.generateMessageId(channel, data);
 
         // Check if this message was already sent to prevent duplicates
-        if (this.messageHistory.has(messageId)) {
-            console.log(`[Socket Client ${this.name}] Message already sent, skipping duplicate: ${messageId.substring(0, 50)}...`);
-            return true;
-        }
+        // if (this.messageHistory.has(messageId)) {
+        //     console.log(`[Socket Client ${this.name}] Message already sent, skipping duplicate: ${messageId.substring(0, 50)}...`);
+        //     return true;
+        // }
 
         // Add to message history
-        this.messageHistory.add(messageId);
+        // this.messageHistory.add(messageId);
 
         // Initialize connection if not already done
         if (!this.initialized) {

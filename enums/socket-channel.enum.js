@@ -1,5 +1,6 @@
 const SocketChannel = {
-    ELECTION: 'election'
+    ELECTION: 'election',
+    TRANSACTION: 'transaction',
 }
 
 module.exports = SocketChannel

@@ -21,7 +21,7 @@ function createApp() {
 
   app.use('/seat', seatRoutes);
   app.use('/mutex', mutexRoutes);
-  app.use('/election', electionRoutes);
+  app.use('/', electionRoutes);
   app.use('/node', nodeRoutes);
   app.use('/transaction', transactionRoutes);
   app.use('/system', systemRoutes);
