@@ -1,6 +1,6 @@
 const express = require('express');
 const bodyParser = require('body-parser');
-
+const cors = require('cors');
 const seatRoutes = require('./modules/seat/seat.routes');
 const mutexRoutes = require('./modules/mutex/mutex.routes');
 const electionRoutes = require('./modules/election/election.routes');
@@ -12,18 +12,19 @@ const morgan = require('morgan');
 function createApp() {
   const app = express();
 
+  app.use(cors());
+
   app.use(bodyParser.json());
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
   app.use(morgan('dev'));
 
-  // Routes
-  app.use('/seat', seatRoutes); // Mount seat routes under /seats
-  app.use('/mutex', mutexRoutes); // Mount mutex routes under /mutex
-  app.use('/election', electionRoutes); // Mount election routes under /election
-  app.use('/node', nodeRoutes); // Mount node routes under /nodes
-  app.use('/transaction', transactionRoutes); // Mount transaction routes under /transactions
-  app.use('/system', systemRoutes); // Mount system routes under /system
+  app.use('/seat', seatRoutes);
+  app.use('/mutex', mutexRoutes);
+  app.use('/election', electionRoutes);
+  app.use('/node', nodeRoutes);
+  app.use('/transaction', transactionRoutes);
+  app.use('/system', systemRoutes);
 
   return app;
 }

@@ -14,12 +14,10 @@ const myId = parseInt(process.env.MY_ID, 10);
 // Cooldown to stop heartbeat from triggering too soon
 state.leaderCooldownUntil = 0;
 
-// GET /ping
 function handlePing(req, res) {
   return res.sendStatus(200);
 }
 
-// POST /election
 async function handleElection(req, res) {
   const { senderId } = req.body;
 
