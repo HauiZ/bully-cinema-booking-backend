@@ -14,7 +14,7 @@ const TransactionType = {
    * Get all possible values
    * @returns {string[]}
    */
-  getAll: () => Object.values(TransactionType),
+  getAll: () => Object.values(TransactionType).filter(v => typeof v === 'string'),
   
   /**
    * Check if a value is a valid transaction type

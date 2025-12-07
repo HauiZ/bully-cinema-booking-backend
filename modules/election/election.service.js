@@ -2,7 +2,6 @@ const axios = require("axios");
 const state = require("../../state");
 const { Node, ElectionHistory } = require("../../models");
 const { nodes: nodeConfig } = require("../../config/nodes");
-const { InternalServerError } = require("../../errors/api.error");
 const SocketChannel = require("../../enums/socket-channel.enum");
 const socketClient = require("../../modules/socket-client/socket.client");
 const dotenv = require("dotenv");
@@ -12,6 +11,9 @@ dotenv.config();
 
 const myId = parseInt(process.env.MY_ID, 10);
 
+// Cooldown to stop heartbeat from triggering too soon
+state.leaderCooldownUntil = 0;
+
 // GET /ping
 function handlePing(req, res) {
   return res.sendStatus(200);
@@ -20,57 +22,47 @@ function handlePing(req, res) {
 // POST /election
 async function handleElection(req, res) {
   const { senderId } = req.body;
+
+  // Respond immediately
+  res.sendStatus(200);
+
+  // If I am bigger, I start my own election
   if (myId > senderId) {
-    res.sendStatus(200);
-    // Only start election if no election is currently running
     if (!state.isElectionRunning) {
-      await startElection(); // I am bigger, I will start an election
+      await startElection();
     }
-  } else {
-    res.sendStatus(200);
   }
 }
 
-// POST /victory
 async function handleVictory(req, res) {
-  const { leaderId, candidates, reason } = req.body;
-  const oldLeaderId = state.currentLeaderId;
-  state.currentLeaderId = leaderId;
+  const { leaderId } = req.params;
+
+  state.currentLeaderId = parseInt(leaderId);
   state.isElectionRunning = false;
 
-  await Node.update({ isLeader: false }, { where: { isLeader: true } });
-  await Node.update({ isLeader: true }, { where: { id: leaderId } });
-
-  await ElectionHistory.create({
-    oldLeaderId: oldLeaderId,
-    newLeaderId: leaderId,
-    candidates: JSON.stringify(candidates),
-    reason,
-  });
+  // Prevent heartbeat from instantly declaring the new leader dead
+  state.leaderCooldownUntil = Date.now() + 3000;
 
   console.log(`👑 NEW LEADER: NODE ${state.currentLeaderId}`);
-  res.sendStatus(200);
+  return res.sendStatus(200);
 }
 
 async function startElection() {
-  // Use a more atomic approach to check and set election state to prevent race conditions
   if (state.isElectionRunning) return;
-
-  // Set the flag immediately to prevent other processes from starting elections
   state.isElectionRunning = true;
 
   const currentNode = await Node.findOne({ where: { id: myId } });
-  if (!myId || !currentNode || currentNode.isLeader || !currentNode.isAlive) {
-    // Reset election state if conditions are not met
+  if (!currentNode) {
     state.isElectionRunning = false;
     return;
   }
 
-  const reason = `Leader ${state.currentLeaderId} is down. starting election...`;
   console.log("📢 Starting election...");
 
-  const allNodes = await Node.findAll({ where: { isAlive: true } });
-  const higherNodes = allNodes.filter((n) => n.id > myId);
+  const allNodes = await Node.findAll();
+  const higherNodes = allNodes.filter(
+    (n) => n.id > myId
+  );
 
   socketClient.sendMessage(SocketChannel.ELECTION, {
     message: getElectionMessage(ElectionStepType.CANDIDATE, myId),
@@ -79,27 +71,27 @@ async function startElection() {
   });
 
   if (higherNodes.length === 0) {
-    await declareVictory(allNodes, reason);
+    await declareVictory(allNodes, `Leader ${state.currentLeaderId} is dead`);
     return;
   }
 
   let anyoneAlive = false;
-  const electionPromises = higherNodes.map(async (node) => {
-    const nodeConfigDetails = nodeConfig.find((n) => n.id === node.id);
-    if (!nodeConfigDetails) return;
-    try {
-      await axios.post(
-        `${nodeConfigDetails.url}/election`,
-        { senderId: myId },
-        { timeout: 1000 }
-      );
-      anyoneAlive = true;
-    } catch (e) {
-      // Node is unresponsive
-    }
-  });
 
-  await Promise.all(electionPromises);
+  await Promise.all(
+    higherNodes.map(async (node) => {
+      const conf = nodeConfig.find((n) => n.id === node.id);
+      if (!conf) return;
+
+      try {
+        await axios.post(
+          `${conf.url}/election`,
+          { senderId: myId },
+          { timeout: 800 }
+        );
+        anyoneAlive = true;
+      } catch (_) {}
+    })
+  );
 
   socketClient.sendMessage(SocketChannel.ELECTION, {
     message: getElectionMessage(ElectionStepType.ELECTION, myId),
@@ -108,12 +100,9 @@ async function startElection() {
   });
 
   if (!anyoneAlive) {
-    await declareVictory(allNodes, reason);
+    await declareVictory(allNodes, "No higher nodes responded");
   } else {
-    // Wait for a potential victory message from a higher node
-    // Use a more robust timeout mechanism that can be cleared if we receive a victory
-    setTimeout(async () => {
-      // Only reset if we're still in an election state and haven't become leader
+    setTimeout(() => {
       if (state.isElectionRunning && state.currentLeaderId !== myId) {
         state.isElectionRunning = false;
       }
@@ -123,82 +112,73 @@ async function startElection() {
 
 async function declareVictory(allNodes, reason) {
   console.log("🎉 I AM THE NEW LEADER!");
+
   const oldLeaderId = state.currentLeaderId;
   state.currentLeaderId = myId;
 
+  state.leaderCooldownUntil = Date.now() + 3000;
+
   await Node.update({ isLeader: false }, { where: { isLeader: true } });
+
   const me = await Node.findByPk(myId);
-  if (!me) {
-    // Reset election state if we couldn't update our own status
-    state.isElectionRunning = false;
-    return;
-  }
   me.isLeader = true;
   await me.save();
 
-  const candidates = allNodes.map((n) => n.id);
-
   await ElectionHistory.create({
-    oldLeaderId: oldLeaderId,
+    oldLeaderId,
     newLeaderId: myId,
-    candidates: JSON.stringify(candidates),
+    candidates: JSON.stringify(allNodes.map(n => n.id)),
     reason,
   });
 
-  const victoryPromises = allNodes.map(async (node) => {
-    const nodeConfigDetails = nodeConfig.find((n) => n.id === node.id);
-    if (node.id !== myId && nodeConfigDetails) {
-      try {
-        await axios.post(`${nodeConfigDetails.url}/victory`, {
-          leaderId: myId,
-          candidates,
-          reason,
-        });
-      } catch (e) {
-        // Node is unresponsive
-      }
-    }
-  });
   socketClient.sendMessage(SocketChannel.ELECTION, {
     message: getElectionMessage(ElectionStepType.VICTORY, myId),
     type: ElectionStepType.VICTORY,
     nodeId: myId,
   });
-  await Promise.all(victoryPromises);
 
-  // Ensure election state is properly reset after victory is declared
+  // Broadcast victory to all nodes
+  await Promise.all(
+    allNodes.map(async (node) => {
+      const conf = nodeConfig.find((n) => n.id === node.id);
+      if (!conf) return;
+
+      try {
+        await axios.post(
+          `${conf.url}/election/victory/${myId}`,
+          {},
+          { timeout: 800 }
+        );
+      } catch (_) {}
+    })
+  );
+
   state.isElectionRunning = false;
 }
 
 async function startHeartbeat() {
   setInterval(async () => {
-    // Only proceed if I'm not the leader, no election is running, and there is a leader to check
     if (
       state.currentLeaderId === myId ||
       state.isElectionRunning ||
-      !state.currentLeaderId
-    )
-      return;
-
-    const leader = await Node.findByPk(state.currentLeaderId);
-    const leaderConfig = nodeConfig.find((n) => n.id === state.currentLeaderId);
-
-    if (!leader || !leaderConfig || !leader.isAlive) {
-      console.log("☠️ Leader is marked as dead. Starting a new election!");
-      state.currentLeaderId = null;
-      await startElection();
+      !state.currentLeaderId ||
+      Date.now() < state.leaderCooldownUntil
+    ) {
       return;
     }
 
+    const leaderConfig = nodeConfig.find((n) => n.id === state.currentLeaderId);
+
+    if (!leaderConfig) {
+      console.log("☠️ Leader missing from config. Election starts.");
+      state.currentLeaderId = null;
+      return await startElection();
+    }
+
     try {
-      await axios.get(`${leaderConfig.url}/ping`, { timeout: 2000 });
-    } catch (e) {
-      console.log(
-        "☠️ Leader is unresponsive. Marking as dead and starting election!"
-      );
-      // Update leader status in DB
-      leader.isAlive = false;
-      await leader.save();
+      await axios.get(`${leaderConfig.url}/ping`, { timeout: 1500 });
+    } catch (_) {
+      console.log("☠️ Leader unresponsive. Election starting...");
       state.currentLeaderId = null;
       await startElection();
     }

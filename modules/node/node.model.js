@@ -6,10 +6,6 @@ const Node = sequelize.define('Node', {
     type: DataTypes.INTEGER,
     primaryKey: true,
   },
-  isAlive: {
-    type: DataTypes.BOOLEAN,
-    defaultValue: true,
-  },
   isLeader: {
     type: DataTypes.BOOLEAN,
     defaultValue: false,

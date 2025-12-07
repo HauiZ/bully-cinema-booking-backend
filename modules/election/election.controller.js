@@ -20,7 +20,7 @@ async function handleElection(req, res) {
 
 async function handleVictory(req, res) {
   try {
-    const result = await electionService.handleVictory(req, res);
+    await electionService.handleVictory(req, res);
     res.status(200).send();
   } catch (error) {
     res.status(error.statusCode || 500).json({ error: error.message });

@@ -3,7 +3,7 @@ const ElectionStepType = {
   ELECTION: "election",
   VICTORY: "victory",
 
-  getAll: () => Object.values(ElectionStepType),
+  getAll: () => Object.values(ElectionStepType).filter(v => typeof v === 'string'),
 
   isValid: (value) => ElectionStepType.getAll().includes(value),
 };

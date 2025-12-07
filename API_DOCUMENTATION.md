@@ -5,7 +5,7 @@
 This document outlines the backend API for the Distributed Ticket Booking System. The system manages seat bookings for a cinema, coordinated by a cluster of nodes. It demonstrates distributed database concepts and fault tolerance using a leader election algorithm (Bully Algorithm).
 
 The API is divided into two main parts:
-- A **RESTful API** for standard state-retrieval and actions (e.g., fetching seats, killing a node).
+- A **RESTful API** for standard state-retrieval and actions (e.g., fetching seats).
 - A **WebSocket/Server-Sent Events (SSE) API** for pushing real-time updates to clients, which is crucial for the admin dashboard to reflect live system changes.
 
 ### Enums
@@ -27,7 +27,6 @@ This table is essential for tracking the state of each node in the cluster.
 ```sql
 CREATE TABLE nodes (
     id INT PRIMARY KEY,                       -- Node ID (e.g., 1, 2, 3)
-    isAlive BOOLEAN DEFAULT TRUE,            -- Whether the node is running
     isLeader BOOLEAN DEFAULT FALSE,          -- Whether this node is the current leader
     last_heartbeat TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -90,7 +89,6 @@ These are the primary JSON objects used in API responses.
 ```json
 {
   "id": 1,
-  "alive": true,
   "isLeader": false
 }
 ```
@@ -190,19 +188,11 @@ All admin-related endpoints should be protected and require authentication.
 - **Response**: `200 OK`
   ```json
   [
-    {"id": 1, "alive": true, "isLeader": false},
-    {"id": 2, "alive": false, "isLeader": false},
-    {"id": 3, "alive": true, "isLeader": true}
+    {"id": 1, "isLeader": false},
+    {"id": 2, "isLeader": false},
+    {"id": 3, "isLeader": true}
   ]
   ```
-
-#### `POST /nodes/{id}/kill`
-- **Description**: Simulates killing a node. This action should trigger a leader election if the killed node was the leader.
-- **Response**: `200 OK`.
-
-#### `POST /nodes/{id}/revive`
-- **Description**: Simulates reviving a "dead" node.
-- **Response**: `200 OK`.
 
 ### System & Logs API
 
@@ -237,7 +227,7 @@ The server should push events to connected clients (especially the admin dashboa
 ### Events
 
 #### `event: node_update`
-- **Description**: Sent when a node's status changes (killed, revived, or becomes leader).
+- **Description**: Sent when a node's status changes (or becomes leader).
 - **Payload**: A `Node` object.
 
 #### `event: seat_update`

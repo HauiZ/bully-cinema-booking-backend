@@ -20,60 +20,6 @@ async function getNodes(req, res) {
   }
 }
 
-async function killNode(req, res) {
-  const { id } = req.params;
-  try {
-    const node = await Node.findByPk(id);
-    if (!node) {
-      throw new NotFoundError();
-    }
-
-    node.isAlive = false;
-    await node.save();
-    await TransactionLog.create({
-      node_id: myId,
-      action_type: TransactionType.KILL,
-      description: `Node ${id} was killed.`,
-    });
-    socketClient.sendMessage(TransactionType.KILL, { nodeId: id });
-    return { message: `Node ${id} was killed.` };
-  } catch (err) {
-    console.error(`Error killing node ${id}:`, err);
-    if (err instanceof NotFoundError) {
-      throw err;
-    }
-    throw new InternalServerError();
-  }
-}
-
-async function reviveNode(req, res) {
-  const { id } = req.params;
-  try {
-    const node = await Node.findByPk(id);
-    if (!node) {
-      throw new NotFoundError();
-    }
-
-    node.isAlive = true;
-    await node.save();
-    await TransactionLog.create({
-      node_id: myId,
-      action_type: TransactionType.REVIVE,
-      description: `Node ${id} was revived.`,
-    });
-    socketClient.sendMessage(TransactionType.REVIVE, { nodeId: id });
-    return { message: `Node ${id} was revived.` };
-  } catch (err) {
-    console.error(`Error reviving node ${id}:`, err);
-    if (err instanceof NotFoundError) {
-      throw err;
-    }
-    throw new InternalServerError();
-  }
-}
-
 module.exports = {
   getNodes,
-  killNode,
-  reviveNode,
 };

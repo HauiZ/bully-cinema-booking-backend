@@ -9,7 +9,7 @@ const NodeRole = {
    * Get all possible values
    * @returns {string[]}
    */
-  getAll: () => Object.values(NodeRole),
+  getAll: () => Object.values(NodeRole).filter(v => typeof v === 'string'),
   
   /**
    * Check if a value is a valid node role

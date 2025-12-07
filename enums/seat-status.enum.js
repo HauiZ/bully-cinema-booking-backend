@@ -9,7 +9,7 @@ const SeatStatus = {
    * Get all possible values
    * @returns {string[]}
    */
-  getAll: () => Object.values(SeatStatus),
+  getAll: () => Object.values(SeatStatus).filter(v => typeof v === 'string'),
   
   /**
    * Check if a value is a valid seat status

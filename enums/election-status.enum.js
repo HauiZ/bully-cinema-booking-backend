@@ -9,7 +9,7 @@ const ElectionStatus = {
    * Get all possible values
    * @returns {string[]}
    */
-  getAll: () => Object.values(ElectionStatus),
+  getAll: () => Object.values(ElectionStatus).filter(v => typeof v === 'string'),
   
   /**
    * Check if a value is a valid election status

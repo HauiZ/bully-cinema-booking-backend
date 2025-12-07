@@ -60,8 +60,8 @@ router.post('/election', handleElection);
  * @swagger
  * /election/victory:
  *   post:
- *     summary: Handle election victory
- *     description: Process election victory announcement from winning node
+ *     summary: Handle victory request
+ *     description: Process victory request from another node
  *     tags: [Election]
  *     requestBody:
  *       required: true
@@ -72,22 +72,12 @@ router.post('/election', handleElection);
  *             properties:
  *               leaderId:
  *                 type: integer
- *                 description: ID of the new leader node
- *                 example: 3
- *               candidates:
- *                 type: array
- *                 description: List of candidate nodes in the election
- *                 items:
- *                   type: integer
- *                   example: [1, 2, 3]
- *               reason:
- *                 type: string
- *                 description: Reason for the election victory
- *                 example: "Election completed successfully"
+ *                 description: ID of the node that won the election
+ *                 example: 2
  *     responses:
  *       200:
- *         description: Election victory processed successfully
+ *         description: Victory request processed successfully
  */
-router.post('/victory', handleVictory);
+router.post('/victory/:leaderId', handleVictory);
 
 module.exports = router;
