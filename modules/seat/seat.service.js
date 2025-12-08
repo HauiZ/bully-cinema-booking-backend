@@ -5,6 +5,9 @@ const { BadRequestError, NotFoundError, InternalServerError, ConflictError } = r
 const SeatStatus = require('../../enums/seat-status.enum');
 const TransactionType = require('../../enums/transaction-type.enum');
 const dotenv = require('dotenv');
+// [THÊM] Import socket client
+const socketClient = require("../../modules/socket-client/socket.client"); 
+
 dotenv.config();
 
 const myId = process.env.MY_ID;
@@ -47,6 +50,12 @@ async function bookSeat(req, res) {
       description: `Customer ${customerName} bought Seat ${seatId}`,
     });
 
+    socketClient.sendMessage(TransactionType.BUY, {
+      seatId: seatId,
+      customerName: customerName,
+      nodeId: parseInt(myId), 
+    });
+
     console.log('Database updated successfully!');
     return targetSeat;
 
@@ -87,6 +96,11 @@ async function releaseSeat(req, res) {
       node_id: myId,
       action_type: TransactionType.RELEASE,
       description: `Seat ${seatId} released (was booked by ${previous_customer})`,
+    });
+
+    socketClient.sendMessage(TransactionType.RELEASE, {
+      seatId: seatId,
+      nodeId: parseInt(myId),
     });
 
     console.log('Database updated successfully!');
