@@ -1,7 +1,7 @@
 const axios = require('axios');
 const state = require('../../state');
 const { nodes } = require('../../config/nodes');
-const { startElection } = require('../../modules/election/election.service');
+const { startElection, startHeartbeat } = require('../../modules/election/election.service');
 const dotenv = require('dotenv');
 dotenv.config();
 
@@ -17,24 +17,43 @@ async function acquireLockWithRetry(requesterId) {
       continue;
     }
 
-    try {
+    if (state.currentLeaderId !== myId) {
+      await startHeartbeat();
+      if (state.currentLeaderId === null || state.isElectionRunning) {
+        console.log('⏳ Leader đang được bầu lại. Đợi 1s...');
+        await sleep(1000);
+        continue;
+      }
+    }
 
+    const leader = nodes.find((n) => n.id === state.currentLeaderId);
+    if (!leader) {
+      console.log('☠️ Leader không có trong config. Bắt đầu bầu cử lại.');
+      state.currentLeaderId = null;
+      startElection();
+      await sleep(2000);
+      continue;
+    }
+
+    try {
       if (state.currentLeaderId === myId) {
         await acquireLocalLock();
       } else {
-        const leader = nodes.find((n) => n.id === state.currentLeaderId);
-        if (leader) {
-          await axios.post(`${leader.url}/mutex/acquire`, { requesterId }, { timeout: 5000 });
-        } else {
-          throw new Error("Leader not found in config");
-        }
+        await axios.post(
+          `${leader.url}/mutex/acquire`,
+          { requesterId },
+          { timeout: 5000 }
+        );
       }
+
       return;
     } catch (error) {
       console.log(
-        `⚠️ Không xin được khóa (Leader ${state.currentLeaderId} có thể đã chết). Đang đợi bầu lại...`
+        `⚠️ Không xin được khóa (Leader ${state.currentLeaderId} có thể đã chết hoặc lỗi mạng). Đang đợi bầu lại...`
       );
-      if (state.currentLeaderId !== myId) startElection();
+      if (state.currentLeaderId !== myId) {
+        startElection();
+      }
       await sleep(2000);
     }
   }

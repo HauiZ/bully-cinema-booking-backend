@@ -87,7 +87,7 @@ async function startElection() {
           { timeout: 800 }
         );
         anyoneAlive = true;
-      } catch (_) {}
+      } catch (_) { }
     })
   );
 
@@ -147,7 +147,7 @@ async function declareVictory(allNodes, reason) {
           {},
           { timeout: 800 }
         );
-      } catch (_) {}
+      } catch (_) { }
     })
   );
 
@@ -155,32 +155,31 @@ async function declareVictory(allNodes, reason) {
 }
 
 async function startHeartbeat() {
-  setInterval(async () => {
-    if (
-      state.currentLeaderId === myId ||
-      state.isElectionRunning ||
-      !state.currentLeaderId ||
-      Date.now() < state.leaderCooldownUntil
-    ) {
-      return;
-    }
+  if (
+    state.currentLeaderId === myId ||
+    state.isElectionRunning ||
+    !state.currentLeaderId ||
+    Date.now() < state.leaderCooldownUntil
+  ) {
+    return;
+  }
 
-    const leaderConfig = nodeConfig.find((n) => n.id === state.currentLeaderId);
+  const leaderConfig = nodeConfig.find((n) => n.id === state.currentLeaderId);
 
-    if (!leaderConfig) {
-      console.log("☠️ Leader missing from config. Election starts.");
-      state.currentLeaderId = null;
-      return await startElection();
-    }
+  if (!leaderConfig) {
+    console.log("☠️ Leader missing from config. Election starts.");
+    state.currentLeaderId = null;
+    await startElection();
+    return;
+  }
 
-    try {
-      await axios.get(`${leaderConfig.url}/ping`, { timeout: 1500 });
-    } catch (_) {
-      console.log("☠️ Leader unresponsive. Election starting...");
-      state.currentLeaderId = null;
-      await startElection();
-    }
-  }, 3000);
+  try {
+    await axios.get(`${leaderConfig.url}/ping`, { timeout: 1500 });
+  } catch (_) {
+    console.log("☠️ Leader unresponsive. Election starting...");
+    state.currentLeaderId = null;
+    await startElection();
+  }
 }
 
 module.exports = {
