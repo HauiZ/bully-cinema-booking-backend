@@ -24,7 +24,6 @@ async function bookSeat(req, res) {
   console.log(`[REQ] Customer ${customerName} wants to book seat ${seatId}`);
 
   await acquireLockWithRetry(myId);
-  print('Tuấn ---------------------------');
 
   try {
     console.log('Lock acquired! Accessing critical section...');

@@ -37,7 +37,6 @@ app.listen(process.env.MY_PORT, "0.0.0.0", async () => {
   }
 
 
-  console.log('End connect Db');
   try {
     socketClient.init();
     await startElection();
