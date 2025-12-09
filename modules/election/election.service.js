@@ -82,7 +82,7 @@ async function startElection() {
 
       try {
         await axios.post(
-          `${conf.url}/election`,
+          `${conf.url}/election/election`,
           { senderId: myId },
           { timeout: 800 }
         );
@@ -174,7 +174,7 @@ async function startHeartbeat() {
   }
 
   try {
-    await axios.get(`${leaderConfig.url}/ping`, { timeout: 1500 });
+    await axios.get(`${leaderConfig.url}/election/ping`, { timeout: 1500 });
   } catch (_) {
     console.log("☠️ Leader unresponsive. Election starting...");
     state.currentLeaderId = null;

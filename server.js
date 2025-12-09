@@ -36,9 +36,11 @@ app.listen(process.env.MY_PORT, "0.0.0.0", async () => {
     console.error("❌ Không thể kết nối DB:", error.message);
   }
 
+
+  console.log('End connect Db');
   try {
     socketClient.init();
-    setTimeout(startElection, 3000);
+    await startElection();
     startHeartbeat();
   } catch (error) {
     console.error("❌ Lỗi khởi động logic phân tán:", error.message);

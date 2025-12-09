@@ -61,7 +61,7 @@ async function acquireLockWithRetry(requesterId) {
 
 async function releaseLock() {
   console.log('... Đang trả khóa ...');
-  if (state.currentLeaderId === myId) {
+  if (state.currentLeaderId == myId) {
     releaseLocalLock();
   } else {
     try {

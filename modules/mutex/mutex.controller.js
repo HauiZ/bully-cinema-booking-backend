@@ -7,7 +7,8 @@ const myId = process.env.MY_ID;
 
 function acquireLock(req, res) {
     try {
-        if (myId !== state.currentLeaderId) {
+        if (myId != state.currentLeaderId) {
+
             res.status(400).send('Not Leader');
             return;
         }
@@ -28,7 +29,7 @@ function acquireLock(req, res) {
 
 function releaseLock(req, res) {
     try {
-        if (myId !== state.currentLeaderId) {
+        if (myId != state.currentLeaderId) {
             res.status(200).send();
             return;
         }
