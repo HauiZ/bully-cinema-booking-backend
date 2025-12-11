@@ -8,6 +8,11 @@ const sequelize = new Sequelize(
     host: process.env.DB_HOST_NAME || 'localhost',
     dialect: 'mysql',
     logging: false,
+    timezone: '+07:00',
+    dialectOptions: {
+      dateStrings: true,
+      typeCast: true,
+    },
     pool: {
       max: 10,
       min: 0,
