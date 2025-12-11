@@ -6,6 +6,8 @@ const nodes = [
   { id: 4, url: 'http://10.15.240.248:3000' }, // Trương
   { id: 5, url: 'http://10.15.240.47:3000' },  // Giang
   { id: 6, url: 'http://10.15.240.149:3000' }, // Tuấn
+    // Localhost
+  // { id: 4, url: 'http://localhost:3000' }, // Localhost
 ];
 
 module.exports = { nodes };
